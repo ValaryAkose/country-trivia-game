@@ -20,7 +20,18 @@ import 'theme/app_theme.dart';
 class TriviaApp extends StatelessWidget {
   final SharedPreferences prefs;
 
-  const TriviaApp({super.key, required this.prefs});
+  /// Test seams. When null, the real network/persistence implementations are used.
+  /// Widget tests must inject fakes, because the test binding blocks all HTTP
+  /// requests (they return 400), which would otherwise render the error state.
+  final CountryRepository? countryRepositoryOverride;
+  final GameRepository? gameRepositoryOverride;
+
+  const TriviaApp({
+    super.key,
+    required this.prefs,
+    this.countryRepositoryOverride,
+    this.gameRepositoryOverride,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,16 +41,20 @@ class TriviaApp extends StatelessWidget {
           create: (_) => http.Client(),
         ),
         Provider<GameRepository>(
-          create: (_) => GameRepositoryImpl(
-            localDataSource: GameLocalDataSourceImpl(prefs: prefs),
-          ),
+          create: (_) =>
+              gameRepositoryOverride ??
+              GameRepositoryImpl(
+                localDataSource: GameLocalDataSourceImpl(prefs: prefs),
+              ),
         ),
         Provider<CountryRepository>(
-          create: (context) => CountryRepositoryImpl(
-            remoteDataSource: CountriesRemoteDataSourceImpl(
-              client: context.read<http.Client>(),
-            ),
-          ),
+          create: (context) =>
+              countryRepositoryOverride ??
+              CountryRepositoryImpl(
+                remoteDataSource: CountriesRemoteDataSourceImpl(
+                  client: context.read<http.Client>(),
+                ),
+              ),
         ),
         ChangeNotifierProvider<GameProvider>(
           create: (context) => GameProvider(

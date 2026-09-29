@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required in ALL build variants: the app fetches country data from
+         https://countriesnow.space and flag images from flagcdn.com.
+         The Flutter template only adds this to the debug/profile manifests,
+         so release builds fail all network calls without it here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="guess_correctly"
         android:name="${applicationName}"
