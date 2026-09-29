@@ -49,9 +49,26 @@ class SubmitAnswer {
       newAttemptsRemaining--;
       newSelectedWrongOptions.add(selectedIso2);
 
+      // Project the chosen wrong iso2 onto the question's options so the UI can
+      // render it red and keep it disabled for the rest of this question.
+      // Without this, AnswerButton.isSelectedWrong stays false forever and the
+      // wrong option becomes clickable again after the feedback delay.
+      final updatedOptions = question.options
+          .map(
+            (o) => newSelectedWrongOptions.contains(o.country.iso2)
+                ? o.copyWith(isSelectedWrong: true)
+                : o,
+          )
+          .toList();
+      final updatedQuestion = TriviaQuestion(
+        correctCountry: question.correctCountry,
+        options: updatedOptions,
+      );
+
       if (newAttemptsRemaining <= 0) {
         return SubmitAnswerResult(
           state: currentState.copyWith(
+            currentQuestion: updatedQuestion,
             attemptsRemaining: 0,
             currentAttempt: currentState.currentAttempt + 1,
             selectedWrongOptions: newSelectedWrongOptions,
@@ -65,6 +82,7 @@ class SubmitAnswer {
 
       return SubmitAnswerResult(
         state: currentState.copyWith(
+          currentQuestion: updatedQuestion,
           attemptsRemaining: newAttemptsRemaining,
           currentAttempt: currentState.currentAttempt + 1,
           selectedWrongOptions: newSelectedWrongOptions,
